@@ -6,6 +6,8 @@ const Page = () => {
   const [todos, setTodos] = useState<ITodo[]>([]);
   const [title, setTitle] = useState<string>("");
   const [showDialog, setShowDialog] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [deleteLoader, setDeleteLoader] = useState<boolean>(false);
 
   const setLocalstorage = (items: ITodo[]) => {
     localStorage.setItem("todos", JSON.stringify(items));
@@ -16,6 +18,7 @@ const Page = () => {
   };
 
   const handleAdd = async () => {
+    setLoading(true);
     const res = await fetch("/api/todo/create", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -27,6 +30,7 @@ const Page = () => {
       fetchTodos();
       setShowDialog(false); // Close dialog on success
     }
+    setLoading(false);
   };
 
   const fetchTodos = async () => {
@@ -63,18 +67,42 @@ const Page = () => {
   };
 
   const handleToggle = async (id: string, status: boolean) => {
-    const res = await fetch("/api/todo/update", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ todoId: id, status: !status }),
+    setTodos((prevTodos) => {
+      const updatedTodos:ITodo[] = prevTodos.map((todo) =>
+        todo._id === id ? { ...todo, completed: !status } as ITodo : todo
+      );
+      return sortTodos(updatedTodos); 
     });
 
-    if (res.ok) {
-      fetchTodos();
+    try {
+      const res = await fetch("/api/todo/update", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ todoId: id, status: !status }),
+      });
+
+      
+      if (!res.ok) {
+        setTodos((prevTodos) => {
+          const updatedTodos:ITodo[] = prevTodos.map((todo) =>
+            todo._id === id ? { ...todo, completed: !status } as ITodo : todo
+          );
+          return sortTodos(updatedTodos); 
+        });
+      }
+    } catch {
+      
+      setTodos((prevTodos) => {
+        const updatedTodos:ITodo[] = prevTodos.map((todo) =>
+          todo._id === id ? { ...todo, completed: !status } as ITodo : todo
+        );
+        return sortTodos(updatedTodos); 
+      });
     }
   };
 
   const deleteTodo = async (id: string) => {
+    setDeleteLoader(true);
     const res = await fetch("/api/todo/delete", {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
@@ -86,8 +114,8 @@ const Page = () => {
       setLocalstorage(updatedTodos);
 
       fetchTodos();
-      fetchTodos();
     }
+    setDeleteLoader(false);
   };
 
   const DateDifference = ({ createdAt }: { createdAt: Date }) => {
@@ -127,7 +155,7 @@ const Page = () => {
       >
         <span className="text-xl">+</span> New Task
       </button>
-  
+
       {showDialog && (
         <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="bg-white p-6 sm:p-10 rounded-3xl shadow-lg relative max-w-lg w-full">
@@ -147,15 +175,15 @@ const Page = () => {
               />
               <button
                 onClick={handleAdd}
-                className="bg-blue-800 text-white px-4 py-2 rounded-lg text-xl hover:bg-blue-600"
+                className="bg-blue-800 text-white px-4 py-2 rounded-lg text-xl hover:bg-blue-600 cursor-pointer"
               >
-                Add
+                {loading ? <span className="loader"></span> : "Add"}
               </button>
             </div>
           </div>
         </div>
       )}
-  
+
       <div className="mt-8 w-full sm:w-4/5 md:w-3/5 lg:w-3/5">
         <ul>
           {todos.map((todo: ITodo) => (
@@ -205,15 +233,19 @@ const Page = () => {
                   className="w-fit h-fit px-1 py-1 rounded-lg bg-red-200 cursor-pointer"
                   onClick={() => deleteTodo(todo._id as string)}
                 >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="24"
-                    height="24"
-                    fill="#a30000"
-                    viewBox="0 0 256 256"
-                  >
-                    <path d="M216,48H176V40a24,24,0,0,0-24-24H104A24,24,0,0,0,80,40v8H40a8,8,0,0,0,0,16h8V208a16,16,0,0,0,16,16H192a16,16,0,0,0,16-16V64h8a8,8,0,0,0,0-16ZM96,40a8,8,0,0,1,8-8h48a8,8,0,0,1,8,8v8H96Zm96,168H64V64H192ZM112,104v64a8,8,0,0,1-16,0V104a8,8,0,0,1,16,0Zm48,0v64a8,8,0,0,1-16,0V104a8,8,0,0,1,16,0Z"></path>
-                  </svg>
+                  {deleteLoader ? (
+                    <span className="deleteLoader"></span>
+                  ) : (
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="24"
+                      height="24"
+                      fill="#a30000"
+                      viewBox="0 0 256 256"
+                    >
+                      <path d="M216,48H176V40a24,24,0,0,0-24-24H104A24,24,0,0,0,80,40v8H40a8,8,0,0,0,0,16h8V208a16,16,0,0,0,16,16H192a16,16,0,0,0,16-16V64h8a8,8,0,0,0,0-16ZM96,40a8,8,0,0,1,8-8h48a8,8,0,0,1,8,8v8H96Zm96,168H64V64H192ZM112,104v64a8,8,0,0,1-16,0V104a8,8,0,0,1,16,0Zm48,0v64a8,8,0,0,1-16,0V104a8,8,0,0,1,16,0Z"></path>
+                    </svg>
+                  )}
                 </span>
               </div>
             </li>
@@ -222,6 +254,6 @@ const Page = () => {
       </div>
     </div>
   );
-}  
+};
 
 export default Page;
