@@ -1,7 +1,13 @@
+"use client"
 import { dark } from "@clerk/themes";
 import { ClerkLoaded, ClerkLoading, ClerkProvider } from "@clerk/nextjs";
 import Navbar from "@/components/Navbar";
 import "./globals.css";
+import dynamic from "next/dynamic";
+const PwaUpdater = dynamic(() => import(`./PwaUpdater`), { ssr: false });
+
+
+
 
 export default function RootLayout({
   children,
@@ -11,14 +17,21 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
+        
+        <title>TickTodos</title>
+        <meta name="description" content="Manage your todos" />
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#ffffff" />
-        <link rel="apple-touch-icon" href="/icon-192x192.png" />
+
+        {/* Apple Web App Settings */}
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-title" content="TickTodos" />
       </head>
+      <PwaUpdater/>
       <ClerkProvider appearance={{ baseTheme: dark }}>
         <body>
+          
           <ClerkLoading>Loading...</ClerkLoading>
           <ClerkLoaded>
             <div className="max-w-full mx-auto">
