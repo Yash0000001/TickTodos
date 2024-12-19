@@ -1,6 +1,7 @@
 {
     "name": "TickTodos",
     "short_name": "TT",
+    "description": "Manage your todos",
     "theme_color": "#ffffff",
     "background_color": "#ffffff",
     "display": "standalone",
