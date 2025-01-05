@@ -21,6 +21,7 @@ export async function POST(req: Request) {
 
     // Create the Todo item
     const newTodo = await todo.create({ title });
+    newTodo.save();
 
     // Find the user by userId or create a new user if not found
     const existingUser = await user.findOneAndUpdate(

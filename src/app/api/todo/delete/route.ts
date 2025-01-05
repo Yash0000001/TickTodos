@@ -16,17 +16,14 @@ export async function DELETE(req: Request) {
     // Parse the request body
     const { todoId } = await req.json();
 
-    console.log("first");
     if (!todoId) {
       return NextResponse.json({ message: "Todo ID is required" }, { status: 400 });
     }
-    console.log("second");
 
     // delete the todo document
     const deletedTodo = await todo.findByIdAndDelete(
       todoId, // Find todo by its id
     );
-    console.log("third");
 
     if (!deletedTodo) {
       return NextResponse.json({ message: "Todo not found" }, { status: 404 });
