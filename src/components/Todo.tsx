@@ -149,7 +149,7 @@ const Todo = () => {
         <div className="relative flex flex-col items-center justify-center pt-10 pb-10 px-6 sm:px-12 md:px-28">
             <button
                 onClick={() => setShowDialog(true)}
-                className="bg-blue-800 text-white p-2 rounded-lg text-xl hover:bg-blue-500 cursor-pointer flex items-start"
+                className="bg-purple-700 text-white p-2 rounded-lg text-xl cursor-pointer flex items-start"
             >
                 <span className="text-xl">+</span> New Task
             </button>
@@ -173,7 +173,7 @@ const Todo = () => {
                             />
                             <button
                                 onClick={handleAdd}
-                                className="bg-blue-800 text-white px-4 py-2 rounded-lg text-xl hover:bg-blue-600 cursor-pointer"
+                                className="bg-purple-700 text-white px-4 py-2 rounded-lg text-xl cursor-pointer"
                             >
                                 {loading ? <span className="loader"></span> : "Add"}
                             </button>

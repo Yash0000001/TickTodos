@@ -1,5 +1,12 @@
 import { INotes } from '@/models/notes.model';
 import React, { useEffect, useState } from 'react'
+import { FaHeart } from 'react-icons/fa6';
+import { FaRegHeart } from 'react-icons/fa6';
+import { VscPinned } from "react-icons/vsc";
+import { TbPinnedFilled } from "react-icons/tb";
+import { FaTrash } from "react-icons/fa";
+import { FaEdit } from "react-icons/fa";
+
 
 const Notes = () => {
     const [notes, setNotes] = useState<INotes[]>([]);
@@ -10,6 +17,7 @@ const Notes = () => {
     const [loading, setLoading] = useState<boolean>(false);
     const [deleteLoader, setDeleteLoader] = useState<boolean>(false);
     const [showMessage, setShowMessage] = useState<boolean>(false);
+    const [isEditMode, setIsEditMode] = useState<boolean>(false);
 
     const setLocalstorage = (items: INotes[]) => {
         localStorage.setItem("notes", JSON.stringify(items));
@@ -21,19 +29,137 @@ const Notes = () => {
 
     const handleAdd = async () => {
         setLoading(true);
-        const res = await fetch("/api/notes/create", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ title, message }),
-        });
-        setTitle("");
-        setMessage("");
 
-        if (res.ok) {
-            fetchNotes();
-            setShowDialog(false); // Close dialog on success
+        if (isEditMode && selectedNote?._id) {
+            const res = await fetch("/api/notes/update", {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    notesId: selectedNote._id,
+                    title,
+                    message,
+                }),
+            });
+
+            if (res.ok) {
+                setTitle("");
+                setMessage("");
+                setShowDialog(false);
+                setIsEditMode(false);
+                setSelectedNote(null);
+                fetchNotes();
+            }
+        } else {
+            const res = await fetch("/api/notes/create", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ title, message }),
+            });
+
+            if (res.ok) {
+                setTitle("");
+                setMessage("");
+                setShowDialog(false);
+                fetchNotes();
+            }
         }
+
         setLoading(false);
+    };
+
+    const toggleLikeUnlike = async (id: string) => {
+        const currentNote = notes.find((note) => note._id === id);
+        if (!currentNote) return;
+
+        const updatedNotes: INotes[] = notes.map((note) => {
+            if (note._id === id) {
+                return {
+                    ...(note.toObject ? note.toObject() : note), // convert if it's a Mongoose document
+                    favourite: !note.favourite,
+                };
+            }
+            return note.toObject ? note.toObject() : note; // ensure all notes are plain
+        });
+        setNotes(updatedNotes);
+        setLocalstorage(updatedNotes);
+
+        try {
+            const res = await fetch("/api/notes/liking", {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ notesId: id }),
+            });
+
+            if (!res.ok) {
+                // throw new Error("Failed to update favourite");
+                const currentNote = notes.find((note) => note._id === id);
+                if (!currentNote) return;
+
+                const updatedNotes: INotes[] = notes.map((note) => {
+                    if (note._id === id) {
+                        return {
+                            ...(note.toObject ? note.toObject() : note), // convert if it's a Mongoose document
+                            favourite: !note.favourite,
+                        };
+                    }
+                    return note.toObject ? note.toObject() : note; // ensure all notes are plain
+                });
+                setNotes(updatedNotes);
+                setLocalstorage(updatedNotes);
+            }
+        } catch (error) {
+            console.error("Error toggling favourite:", error);
+            setNotes(notes);
+        }
+    };
+
+    const togglePinUnpin = async (id: string) => {
+        const currentNote = notes.find((note) => note._id === id);
+        if (!currentNote) return;
+
+        const updatedNotes: INotes[] = notes.map((note) => {
+            if (note._id === id) {
+                return {
+                    ...(note.toObject ? note.toObject() : note), // convert if it's a Mongoose document
+                    pinned: !note.pinned,
+                };
+            }
+            return note.toObject ? note.toObject() : note; // ensure all notes are plain
+        });
+        setNotes(updatedNotes);
+        setLocalstorage(updatedNotes);
+
+        try {
+            const res = await fetch("/api/notes/pinning", {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ notesId: id }),
+            });
+
+            if (!res.ok) {
+                const currentNote = notes.find((note) => note._id === id);
+                if (!currentNote) return;
+
+                const updatedNotes: INotes[] = notes.map((note) => {
+                    if (note._id === id) {
+                        return {
+                            ...(note.toObject ? note.toObject() : note),
+                            pinned: !note.pinned,
+                        };
+                    }
+                    return note.toObject ? note.toObject() : note;
+                });
+                setNotes(updatedNotes);
+                setLocalstorage(updatedNotes);
+            }
+        } catch (error) {
+            console.error("Error toggling pinning:", error);
+            setNotes(notes);
+        }
     };
 
     const fetchNotes = async () => {
@@ -107,11 +233,10 @@ const Notes = () => {
         );
     };
 
-    const truncateMessage = (message: string | undefined, wordLimit: number) => {
+    const truncateMessage = (message: string | undefined, charLimit: number) => {
         if (!message) return "No content available...";
-        const words = message.split(" ");
-        return words.length > wordLimit
-            ? `${words.slice(0, wordLimit).join(" ")}...`
+        return message.length > charLimit
+            ? `${message.slice(0, charLimit)}...`
             : message;
     };
     useEffect(() => {
@@ -121,7 +246,7 @@ const Notes = () => {
         <div className="relative flex flex-col items-center justify-center pt-10 pb-10 px-6 sm:px-12 md:px-28 ">
             <button
                 onClick={() => setShowDialog(true)}
-                className="bg-blue-800 text-white p-2 rounded-lg text-xl hover:bg-blue-500 cursor-pointer flex items-start"
+                className="bg-purple-700 text-white p-2 rounded-lg text-xl cursor-pointer flex items-start"
             >
                 <span className="text-xl">+</span> New Notes
             </button>
@@ -135,7 +260,9 @@ const Notes = () => {
                         >
                             &times;
                         </button>
-                        <h2 className="text-3xl font-bold mb-6">Add New Notes</h2>
+                        <h2 className="text-3xl font-bold mb-6">
+                            {isEditMode ? "Update Note" : "Add New Note"}
+                        </h2>
                         <div className="flex flex-col gap-4 items-center space-y-4 sm:space-y-0 sm:space-x-4">
                             <input
                                 value={title}
@@ -152,9 +279,10 @@ const Notes = () => {
                             />
                             <button
                                 onClick={handleAdd}
-                                className="bg-blue-800 text-white px-4 py-2 rounded-lg text-xl hover:bg-blue-600 cursor-pointer"
+                                className="bg-purple-700 text-white px-4 py-2 rounded-lg text-xl cursor-pointer"
                             >
-                                {loading ? <span className="loader"></span> : "Add"}
+                                {loading ? <span className="loader"></span> : isEditMode ? "Update" : "Add"}
+
                             </button>
                         </div>
                     </div>
@@ -165,43 +293,68 @@ const Notes = () => {
                 {notes.map((note) => (
                     <div
                         key={note._id as string}
-                        className="relative border rounded-lg p-4 bg-white shadow-md hover:shadow-lg cursor-pointer"
+                        className="relative border rounded-lg p-4 bg-white shadow-md hover:shadow-lg"
                         onClick={() => {
                             setSelectedNote(note);
                             setShowMessage(true);
                         }}
                     >
                         <div className='flex items-start justify-between'>
-                            <h3 className="text-xl font-bold mb-2">{note.title || "Untitled"}</h3>
-                            <DateDifference createdAt={note?.createdAt} />
+                            <h3 className="text-xl font-bold mb-2">{truncateMessage(note.title, 13) || "Untitled"}</h3>
                         </div>
                         <p className="text-gray-600 mb-11">
-                            {truncateMessage(note.message, 50)}
+                            {truncateMessage(note.message, 31)}
                         </p>
 
-                        <div className='absolute bottom-2 '>
+                        <div className='w-11/12 absolute bottom-2 flex gap-2 items-center justify-between'>
                             <button
                                 title='delete note'
-                                className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     deleteNote(note._id as string);
                                 }}
                             >
                                 {deleteLoader ? <span className="deleteLoader"></span> :
-                                    <svg
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        width="24"
-                                        height="24"
-                                        fill="#fff"
-                                        viewBox="0 0 256 256"
-                                    >
-                                        <path d="M216,48H176V40a24,24,0,0,0-24-24H104A24,24,0,0,0,80,40v8H40a8,8,0,0,0,0,16h8V208a16,16,0,0,0,16,16H192a16,16,0,0,0,16-16V64h8a8,8,0,0,0,0-16ZM96,40a8,8,0,0,1,8-8h48a8,8,0,0,1,8,8v8H96Zm96,168H64V64H192ZM112,104v64a8,8,0,0,1-16,0V104a8,8,0,0,1,16,0Zm48,0v64a8,8,0,0,1-16,0V104a8,8,0,0,1,16,0Z"></path>
-                                    </svg>
+                                    <FaTrash className='text-purple-700'/>
                                 }
 
                             </button>
+                            <DateDifference createdAt={note?.createdAt} />
 
+
+                        </div>
+                        <div className='flex flex-col gap-2 items-center justify-center absolute right-2 top-3'>
+                            <button
+                                title='edit note'
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setSelectedNote(note);
+                                    setTitle(note.title);
+                                    setMessage(note.message);
+                                    setIsEditMode(true);
+                                    setShowDialog(true);
+                                }}
+                            >
+                                <FaEdit className='size-5 text-purple-700' />
+                            </button>
+                            <button
+                                title='favourite'
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    toggleLikeUnlike(note._id as string);
+                                }}
+                            >
+                                {note.favourite ? <FaHeart className='size-5 text-purple-700' /> : <FaRegHeart className='size-5 text-purple-700' />}
+                            </button>
+                            <button
+                                title='pinning'
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    togglePinUnpin(note._id as string);
+                                }}
+                            >
+                                {note.pinned ? <TbPinnedFilled className='size-7 text-purple-700' /> : <VscPinned className='size-7 text-purple-700' />}
+                            </button>
                         </div>
                     </div>
                 ))}
@@ -210,7 +363,7 @@ const Notes = () => {
             {/* Dialog Box for Full Note */}
             {showMessage && selectedNote && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50">
-                    <div className="bg-white p-6 sm:p-10 rounded-3xl shadow-lg relative max-w-lg w-full">
+                    <div className="bg-white p-6 sm:p-10 rounded-3xl shadow-lg relative max-w-lg w-1/2">
                         <button
                             onClick={() => setShowMessage(false)}
                             className="absolute top-3 right-3 text-2xl font-bold text-gray-600 hover:text-gray-800"
@@ -224,7 +377,7 @@ const Notes = () => {
                             Back
                         </button>
                         <h2 className="text-3xl font-bold mb-6">{selectedNote.title}</h2>
-                        <p className="text-lg text-gray-700">{selectedNote.message || "No content available..."}</p>
+                        <p className="text-lg text-gray-700 w-full break-words">{selectedNote.message || "No content available..."}</p>
                     </div>
                 </div>
             )}

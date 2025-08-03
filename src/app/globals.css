@@ -23,12 +23,12 @@
 }
 
 .deleteLoader {
-  width: 24px;
-  height: 24px;
+  width: 20px;
+  height: 20px;
   border-radius: 50%;
   display: inline-block;
   position: relative;
-  border: 2px solid #ff3d00;
+  border: 2px solid oklch(49.6% 0.265 301.924);
   box-sizing: border-box;
   animation: rotation 1s linear infinite;
 }
