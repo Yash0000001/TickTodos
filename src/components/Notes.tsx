@@ -6,6 +6,7 @@ import { VscPinned } from "react-icons/vsc";
 import { TbPinnedFilled } from "react-icons/tb";
 import { FaTrash } from "react-icons/fa";
 import { FaEdit } from "react-icons/fa";
+import { useMemo } from "react";
 
 
 const Notes = () => {
@@ -18,6 +19,7 @@ const Notes = () => {
     const [deleteLoader, setDeleteLoader] = useState<boolean>(false);
     const [showMessage, setShowMessage] = useState<boolean>(false);
     const [isEditMode, setIsEditMode] = useState<boolean>(false);
+    const [state, setState] = useState<string>("All");
 
     const setLocalstorage = (items: INotes[]) => {
         localStorage.setItem("notes", JSON.stringify(items));
@@ -239,17 +241,34 @@ const Notes = () => {
             ? `${message.slice(0, charLimit)}...`
             : message;
     };
+
+    const getFilteredNotes = useMemo(() => {
+        switch (state) {
+            case "Favourite":
+                return notes.filter(note => note.favourite);
+            case "Pinned":
+                return notes.filter(note => note.pinned);
+            default:
+                return notes;
+        }
+    },[state,notes]);
     useEffect(() => {
         fetchNotes();
     }, []);
     return (
-        <div className="relative flex flex-col items-center justify-center pt-10 pb-10 px-6 sm:px-12 md:px-28 ">
+        <div className="w-full relative flex flex-col items-center justify-center pt-10 pb-10 px-6 sm:px-12 md:px-28 ">
             <button
                 onClick={() => setShowDialog(true)}
-                className="bg-purple-700 text-white p-2 rounded-lg text-xl cursor-pointer flex items-start"
+                className="bg-purple-700 text-white p-2 rounded-lg text-lg cursor-pointer flex items-start mb-4"
             >
                 <span className="text-xl">+</span> New Notes
             </button>
+
+            <div className='flex gap-2'>
+                <button onClick={() => setState("All")} className={`${state === "All" ? "bg-purple-700 text-white" : "bg-white text-purple-700"} p-2 rounded-lg`}> All </button>
+                <button onClick={() => setState("Favourite")} className={`${state === "Favourite" ? "bg-purple-700 text-white" : "bg-white text-purple-700"} p-2 rounded-lg`}> Favourite </button>
+                <button onClick={() => setState("Pinned")} className={`${state === "Pinned" ? "bg-purple-700 text-white" : "bg-white text-purple-700"} p-2 rounded-lg`}> Pinned</button>
+            </div>
 
             {showDialog && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50">
@@ -289,8 +308,8 @@ const Notes = () => {
                 </div>
             )}
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6 w-full sm:w-4/5 mt-7">
-                {notes.map((note) => (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6 w-full mt-7">
+                {getFilteredNotes.map((note) => (
                     <div
                         key={note._id as string}
                         className="relative border rounded-lg p-4 bg-white shadow-md hover:shadow-lg"
@@ -315,7 +334,7 @@ const Notes = () => {
                                 }}
                             >
                                 {deleteLoader ? <span className="deleteLoader"></span> :
-                                    <FaTrash className='text-purple-700'/>
+                                    <FaTrash className='text-purple-700' />
                                 }
 
                             </button>
