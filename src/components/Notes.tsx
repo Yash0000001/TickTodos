@@ -7,6 +7,7 @@ import { TbPinnedFilled } from "react-icons/tb";
 import { FaTrash } from "react-icons/fa";
 import { FaEdit } from "react-icons/fa";
 import { useMemo } from "react";
+import { FaPlusCircle } from "react-icons/fa";
 
 
 const Notes = () => {
@@ -258,10 +259,12 @@ const Notes = () => {
     return (
         <div className="w-full relative flex flex-col items-center justify-center pt-10 pb-10 px-6 sm:px-12 md:px-28 ">
             <button
+                title='add'
+                type='button'
                 onClick={() => setShowDialog(true)}
-                className="bg-purple-700 text-white p-2 rounded-lg text-lg cursor-pointer flex items-start mb-4"
+                className=" text-lg cursor-pointer flex items-start mb-4 absolute bottom-0 -right-8"
             >
-                <span className="text-xl">+</span> New Notes
+                <FaPlusCircle className='size-16 text-purple-700'/>
             </button>
 
             <div className='flex gap-2'>
@@ -319,7 +322,7 @@ const Notes = () => {
                         }}
                     >
                         <div className='flex items-start justify-between'>
-                            <h3 className="text-xl font-bold mb-2">{truncateMessage(note.title, 13) || "Untitled"}</h3>
+                            <h3 className="text-xl font-bold mb-2 text-purple-700">{truncateMessage(note.title, 13) || "Untitled"}</h3>
                         </div>
                         <p className="text-gray-600 mb-11">
                             {truncateMessage(note.message, 31)}
@@ -338,7 +341,7 @@ const Notes = () => {
                                 }
 
                             </button>
-                            <DateDifference createdAt={note?.createdAt} />
+                            <DateDifference createdAt={note?.createdAt}/>
 
 
                         </div>
@@ -391,11 +394,11 @@ const Notes = () => {
                         </button>
                         <button
                             onClick={() => setShowMessage(false)}
-                            className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 mb-4"
+                            className="bg-purple-700 text-white px-3 py-1 rounded hover:bg-purple-400 mb-4"
                         >
                             Back
                         </button>
-                        <h2 className="text-3xl font-bold mb-6">{selectedNote.title}</h2>
+                        <h2 className="text-3xl font-bold mb-6 text-purple-700">{selectedNote.title}</h2>
                         <p className="text-lg text-gray-700 w-full break-words">{selectedNote.message || "No content available..."}</p>
                     </div>
                 </div>
