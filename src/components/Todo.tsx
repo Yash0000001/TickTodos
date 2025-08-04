@@ -1,12 +1,13 @@
 import { ITodo } from '@/models/todo.model';
 import React, { useEffect, useState } from 'react'
+import { FaTrash } from 'react-icons/fa6';
 
 const Todo = () => {
     const [todos, setTodos] = useState<ITodo[]>([]);
     const [title, setTitle] = useState<string>("");
     const [showDialog, setShowDialog] = useState<boolean>(false);
     const [loading, setLoading] = useState<boolean>(false);
-    const [deleteLoader, setDeleteLoader] = useState<boolean>(false);
+    const [deleteLoader, setDeleteLoader] = useState<string | null>(null);
 
     const setLocalstorage = (items: ITodo[]) => {
         localStorage.setItem("todos", JSON.stringify(items));
@@ -101,7 +102,7 @@ const Todo = () => {
     };
 
     const deleteTodo = async (id: string) => {
-        setDeleteLoader(true);
+        setDeleteLoader(id);
         const res = await fetch("/api/todo/delete", {
             method: "DELETE",
             headers: { "Content-Type": "application/json" },
@@ -114,7 +115,7 @@ const Todo = () => {
 
             fetchTodos();
         }
-        setDeleteLoader(false);
+        setDeleteLoader(null);
     };
 
     const DateDifference = ({ createdAt }: { createdAt: Date }) => {
@@ -199,9 +200,9 @@ const Todo = () => {
                                         }
                                         className="hidden peer"
                                     />
-                                    <div className="w-5 h-5 border-2 border-gray-400 rounded-md peer-checked:bg-blue-500 peer-checked:border-blue-500"></div>
+                                    <div className="w-5 h-5 border-2 border-gray-400 rounded-md peer-checked:bg-purple-700 peer-checked:border-purple-700"></div>
                                     <div
-                                        className={`mb-2 text-lg md:text-2xl lg:text-2xl ${todo?.completed ? "text-gray-500 line-through" : ""
+                                        className={`mb-2 text-lg md:text-2xl lg:text-2xl  ${todo?.completed ? "text-gray-500 line-through" : ""
                                             }`}
                                     >
                                         {todo?.title}
@@ -225,21 +226,13 @@ const Todo = () => {
                                     {todo?.completed ? "Completed" : "Pending"}
                                 </span>
                                 <span
-                                    className="w-fit h-fit px-1 py-1 rounded-lg bg-red-200 cursor-pointer"
+                                    className=" cursor-pointer"
                                     onClick={() => deleteTodo(todo._id as string)}
                                 >
-                                    {deleteLoader ? (
+                                    {deleteLoader===todo._id ? (
                                         <span className="deleteLoader"></span>
                                     ) : (
-                                        <svg
-                                            xmlns="http://www.w3.org/2000/svg"
-                                            width="24"
-                                            height="24"
-                                            fill="#a30000"
-                                            viewBox="0 0 256 256"
-                                        >
-                                            <path d="M216,48H176V40a24,24,0,0,0-24-24H104A24,24,0,0,0,80,40v8H40a8,8,0,0,0,0,16h8V208a16,16,0,0,0,16,16H192a16,16,0,0,0,16-16V64h8a8,8,0,0,0,0-16ZM96,40a8,8,0,0,1,8-8h48a8,8,0,0,1,8,8v8H96Zm96,168H64V64H192ZM112,104v64a8,8,0,0,1-16,0V104a8,8,0,0,1,16,0Zm48,0v64a8,8,0,0,1-16,0V104a8,8,0,0,1,16,0Z"></path>
-                                        </svg>
+                                        <FaTrash className='text-purple-700' />
                                     )}
                                 </span>
                             </div>

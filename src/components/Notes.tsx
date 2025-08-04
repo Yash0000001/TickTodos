@@ -17,7 +17,7 @@ const Notes = () => {
     const [message, setMessage] = useState<string>("");
     const [showDialog, setShowDialog] = useState<boolean>(false);
     const [loading, setLoading] = useState<boolean>(false);
-    const [deleteLoader, setDeleteLoader] = useState<boolean>(false);
+    const [deleteLoader, setDeleteLoader] = useState<string | null>(null);
     const [showMessage, setShowMessage] = useState<boolean>(false);
     const [isEditMode, setIsEditMode] = useState<boolean>(false);
     const [state, setState] = useState<string>("All");
@@ -194,7 +194,7 @@ const Notes = () => {
     };
 
     const deleteNote = async (id: string) => {
-        setDeleteLoader(true);
+        setDeleteLoader(id);
         const res = await fetch("/api/notes/delete", {
             method: "DELETE",
             headers: { "Content-Type": "application/json" },
@@ -207,7 +207,7 @@ const Notes = () => {
 
             fetchNotes();
         }
-        setDeleteLoader(false);
+        setDeleteLoader(null);
     };
 
     const DateDifference = ({ createdAt }: { createdAt: Date }) => {
@@ -336,14 +336,12 @@ const Notes = () => {
                                     deleteNote(note._id as string);
                                 }}
                             >
-                                {deleteLoader ? <span className="deleteLoader"></span> :
+                                {deleteLoader === note._id ? <span className="deleteLoader"></span> :
                                     <FaTrash className='text-purple-700' />
                                 }
 
                             </button>
                             <DateDifference createdAt={note?.createdAt}/>
-
-
                         </div>
                         <div className='flex flex-col gap-2 items-center justify-center absolute right-2 top-3'>
                             <button
