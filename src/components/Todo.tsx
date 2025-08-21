@@ -144,6 +144,7 @@ const Todo = () => {
         );
     };
     useEffect(() => {
+        setTodos(loadLocalStorage());
         fetchTodos();
     }, []);
     return (
@@ -229,7 +230,7 @@ const Todo = () => {
                                     className=" cursor-pointer"
                                     onClick={() => deleteTodo(todo._id as string)}
                                 >
-                                    {deleteLoader===todo._id ? (
+                                    {deleteLoader === todo._id ? (
                                         <span className="deleteLoader"></span>
                                     ) : (
                                         <FaTrash className='text-purple-700' />

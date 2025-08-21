@@ -251,6 +251,7 @@ const Notes = () => {
         }
     }, [state, notes]);
     useEffect(() => {
+        setNotes(loadLocalStorage());
         fetchNotes();
     }, []);
     return (
