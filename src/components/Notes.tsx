@@ -45,11 +45,6 @@ const Notes = () => {
             });
 
             if (res.ok) {
-                setTitle("");
-                setMessage("");
-                setShowDialog(false);
-                setIsEditMode(false);
-                setSelectedNote(null);
                 fetchNotes();
             }
         } else {
@@ -60,13 +55,15 @@ const Notes = () => {
             });
 
             if (res.ok) {
-                setTitle("");
-                setMessage("");
-                setShowDialog(false);
+
                 fetchNotes();
             }
         }
-
+        setTitle("");
+        setMessage("");
+        setIsEditMode(false);
+        setSelectedNote(null);
+        setShowDialog(false);
         setLoading(false);
     };
 
@@ -252,7 +249,7 @@ const Notes = () => {
             default:
                 return notes;
         }
-    },[state,notes]);
+    }, [state, notes]);
     useEffect(() => {
         fetchNotes();
     }, []);
@@ -264,7 +261,7 @@ const Notes = () => {
                 onClick={() => setShowDialog(true)}
                 className=" text-lg cursor-pointer flex items-start mb-4 absolute bottom-0 -right-8"
             >
-                <FaPlusCircle className='size-16 text-purple-700'/>
+                <FaPlusCircle className='size-16 text-purple-700' />
             </button>
 
             <div className='flex gap-2'>
@@ -277,7 +274,14 @@ const Notes = () => {
                 <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50">
                     <div className="bg-white p-6 sm:p-10 rounded-3xl shadow-lg relative max-w-lg w-full">
                         <button
-                            onClick={() => setShowDialog(false)}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedNote(null);
+                                setTitle("");
+                                setMessage("");
+                                setIsEditMode(false);
+                                setShowDialog(false);
+                            }}
                             className="absolute top-3 right-3 text-2xl font-bold text-gray-600 hover:text-gray-800"
                         >
                             &times;
@@ -341,7 +345,7 @@ const Notes = () => {
                                 }
 
                             </button>
-                            <DateDifference createdAt={note?.createdAt}/>
+                            <DateDifference createdAt={note?.createdAt} />
                         </div>
                         <div className='flex flex-col gap-2 items-center justify-center absolute right-2 top-3'>
                             <button
